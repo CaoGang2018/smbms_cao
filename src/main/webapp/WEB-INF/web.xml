@@ -60,6 +60,15 @@
         <url-pattern>/jsp/user.do</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ucexit</servlet-name>
+        <servlet-class>com.cao.servlet.user.UserServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ucexit</servlet-name>
+        <url-pattern>/user/ucexist,html</url-pattern>
+    </servlet-mapping>
+
 
     <session-config>
         <session-timeout>30</session-timeout>

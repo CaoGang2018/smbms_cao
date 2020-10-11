@@ -8,9 +8,9 @@
             <span>用户管理页面 >> 用户添加页面</span>
         </div>
         <div class="providerAdd">
-            <form id="userForm" name="userForm" enctype="multipart/form-data"  method="post"
-                  action="${pageContext.request.contextPath }/jsp/user.do">
-				<input type="hidden" name="method" value="add">
+            <form id="userForm" name="userForm" enctype="multipart/form-data" method="post"
+                  action="${pageContext.request.contextPath }/jsp/user.do?method=add">
+				<%--<input type="hidden" name="method" value="add">--%>
                 <!--div的class 为error是验证错误，ok是验证成功-->
                 <div>
                     <label for="userCode">用户编码：</label>
@@ -63,14 +63,14 @@
                 </div>
                 <div>
                 	<input type="hidden" id="errorinfo" value="${uploadFileError}"/>
-                    <label for="a_idPicPath">证件照：</label>
-                   	<input type="file" name="attachs" id="a_idPicPath"/>
+                    <label for="idPicPath">证件照：</label>
+                   	<input type="file" name="idPicPath" id="idPicPath"/>
                     <font color="red"></font>
                 </div>
               	<div>
                 	<input type="hidden" id="errorinfo_wp" value="${uploadWpError}"/>
-                    <label for="a_workPicPath">工作证照片：</label>
-                   	<input type="file" name="attachs" id="a_workPicPath"/>
+                    <label for="workPicPath">工作证照片：</label>
+                   	<input type="file" name="workPicPath" id="workPicPath"/>
                     <font color="red"></font>
                 </div>
                 <div class="providerAddBtn">
@@ -82,4 +82,4 @@
 </div>
 </section>
 <%@include file="/jsp/common/foot.jsp" %>
-<script type="text/javascript" src="${pageContext.request.contextPath }/statics/js/useradd.js" charset="UTF-8"></script>
+<script type="text/javascript" src="${pageContext.request.contextPath }/statics/js/useradd.js"></script>

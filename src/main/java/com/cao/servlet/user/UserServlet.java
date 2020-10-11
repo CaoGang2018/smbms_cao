@@ -10,19 +10,22 @@ import com.cao.service.user.UserServiceImpl;
 import com.cao.util.Constants;
 import com.cao.util.PageSupport;
 import com.mysql.cj.util.StringUtils;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.ProgressListener;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
+import javax.servlet.Filter;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.text.FieldPosition;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author admin_cg
@@ -45,6 +48,94 @@ public class UserServlet extends HttpServlet {
             this.getRoleList(req, resp);
         } else if (method != null && method.equals("ucexist")){
             this.checkExist(req, resp);
+        } else if (method != null && method.equals("deluser")){
+            this.delUser(req, resp);
+        } else if (method != null && method.equals("view")){
+            this.getUserById(req, resp, "userview.jsp");
+        } else if (method != null && method.equals("modify")){
+            this.getUserById(req, resp, "usermodify.jsp");
+        } else if (method != null && method.equals("modifyexe")){
+            this.modifyUser(req, resp);
+        }
+    }
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        doGet(req, resp);
+    }
+
+    private void modifyUser(HttpServletRequest req, HttpServletResponse resp) {
+        String id = req.getParameter("id");
+        String userName = req.getParameter("userName");
+        String gender = req.getParameter("gender");
+        String birthday = req.getParameter("birthday");
+        String phone = req.getParameter("phone");
+        String address = req.getParameter("address");
+        String userRole = req.getParameter("userRole");
+
+        User user = new User();
+        user.setId(Integer.parseInt(id));
+        user.setUserName(userName);
+        user.setGender(Integer.parseInt(gender));
+        try {
+            user.setBirthday(new SimpleDateFormat("yyyy-MM-dd").parse(birthday));
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        user.setPhone(phone);
+        user.setAddress(address);
+        user.setUserRole(Integer.parseInt(userRole));
+        user.setModifyBy(((User) req.getSession().getAttribute(Constants.USER_SESSION)).getId());
+        user.setModifyDate(new Date());
+
+        UserServiceImpl userService = new UserServiceImpl();
+
+        try {
+            if (userService.updateUser(user)){
+                resp.sendRedirect(req.getContextPath() + "/jsp/user.do?method=query");
+            } else {
+                req.getRequestDispatcher("usermodify.jsp").forward(req, resp);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void getUserById(HttpServletRequest req, HttpServletResponse resp, String url) {
+        int id = Integer.parseInt(req.getParameter("uid"));
+        UserServiceImpl userService = new UserServiceImpl();
+        User user = userService.getUserById(id);
+        req.setAttribute("user", user);
+        try {
+            req.getRequestDispatcher(url).forward(req, resp);
+        } catch (ServletException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void delUser(HttpServletRequest req, HttpServletResponse resp) {
+        String uid = req.getParameter("uid");
+        int id = Integer.parseInt(uid);
+        UserServiceImpl userService = new UserServiceImpl();
+
+        Map<String, String> map = new HashMap<>();
+        if (userService.getUserById(id) != null){
+            if (userService.delUserById(id)){
+                map.put("delResult", "true");
+            } else {
+                map.put("delResult", "false");
+            }
+        } else {
+            map.put("delResult", "notexist");
+        }
+        try {
+            resp.setContentType("application/json");
+            PrintWriter writer = resp.getWriter();
+            writer.write(JSONArray.toJSONString(map));
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -76,7 +167,7 @@ public class UserServlet extends HttpServlet {
         try {
             resp.setContentType("application/json");
             PrintWriter writer = resp.getWriter();
-            //writer.write(JSONArray.toJSONString(roleList));
+            writer.write(JSONArray.toJSONString(roleList));
             System.out.println(JSONArray.toJSONString(roleList));
             writer.flush();
             writer.close();
@@ -85,37 +176,129 @@ public class UserServlet extends HttpServlet {
         }
     }
 
+    private Map<String, String> addUserHelper(HttpServletRequest req){
+        String uploadPath = this.getServletContext().getRealPath("/statics/images");
+        File uploadFile = new File(uploadPath);
+        if (!uploadFile.exists()){
+            uploadFile.mkdir();
+        }
 
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doGet(req, resp);
+        // 临时文件路径
+        String tmpPath = this.getServletContext().getRealPath("/statics/temp_images");
+        File file = new File(tmpPath);
+        if (!file.exists()){
+            file.mkdir();
+        }
+
+        DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
+        diskFileItemFactory.setSizeThreshold(1024*1024); // 缓冲区大小
+        diskFileItemFactory.setRepository(file);
+
+        // 2 获取ServletFileUpload
+        ServletFileUpload servletFileUpload = new ServletFileUpload(diskFileItemFactory);
+
+        // 监听文件上传进度
+        servletFileUpload.setProgressListener(new ProgressListener() {
+            @Override
+            public void update(long l, long l1, int i) {
+                System.out.println("总大小：" + l1 + " 已上传：" + l);
+            }
+        });
+
+        // 处理乱码
+        servletFileUpload.setHeaderEncoding("UTF-8");
+        servletFileUpload.setFileSizeMax(1024*1024*10);
+        servletFileUpload.setSizeMax(1024*1024*10);
+
+        Map<String, String> userMap = new HashMap<>();
+
+
+        try {
+            List<FileItem> fileItems = servletFileUpload.parseRequest(req);
+            for (FileItem fileItem : fileItems) {
+                if (fileItem.isFormField()){
+                    String fieldName = fileItem.getFieldName();
+                    String value = fileItem.getString("UTF-8");
+                    userMap.put(fieldName, value);
+                    System.out.println(fieldName + " : " + value);
+                } else {
+                    String name = fileItem.getName();
+                    System.out.println("上传的文件名" + name);
+                    if (name == null || name.trim().equals("")){
+                        continue;
+                    }
+                    //String fileName = name.substring(name.lastIndexOf("/") + 1);
+                    String fileExtName = name.substring(name.lastIndexOf("."));
+
+                    String uuidPath = UUID.randomUUID().toString();
+
+                    String realPath = uploadPath + "\\" + uuidPath;
+                    File realPathFile = new File(realPath);
+                    if (!realPathFile.exists()){
+                        realPathFile.mkdir();
+                    }
+
+                    String fileP = realPath + "\\" + userMap.get("userCode") + fileExtName;
+                    String fileP1 = uuidPath + "\\" + userMap.get("userCode") + fileExtName;
+                    InputStream inputStream = fileItem.getInputStream();
+                    FileOutputStream fos = new FileOutputStream(fileP);
+                    userMap.put(fileItem.getFieldName(), fileP1);
+
+                    System.out.println("images" + fileItem.getFieldName());
+
+                    byte[] buffer = new byte[1024 * 1024];
+                    int len = 0;
+                    while ((len = inputStream.read(buffer)) > 0){
+                        fos.write(buffer, 0, len);
+                    }
+                    fos.close();
+                    inputStream.close();
+
+                    fileItem.delete();
+                }
+            }
+        } catch (FileUploadException | IOException e) {
+            e.printStackTrace();
+        }
+        return userMap;
     }
-
     private void addUser(HttpServletRequest req, HttpServletResponse resp) {
-        String userCode = req.getParameter("userCode");
+        /*String userCode = req.getParameter("userCode");
         String userName = req.getParameter("userName");
+        System.out.println("userName" + userName);
         String userPassword = req.getParameter("userPassword");
         String gender = req.getParameter("gender");
+        System.out.println("gender" + gender);
         String birthday = req.getParameter("birthday");
         String phone = req.getParameter("phone");
         String address = req.getParameter("address");
         String userRole = req.getParameter("userRole");
+        System.out.println("userRole" + userRole);*/
+
+        Map<String, String> userMap = addUserHelper(req);
+        System.out.println(userMap.keySet().toArray()[0]);
 
         User user = new User();
-        user.setUserCode(userCode);
-        user.setUserName(userName);
-        user.setUserPassword(userPassword);
-        user.setGender(Integer.parseInt(gender));
+        user.setUserCode(userMap.get("userCode"));
+        user.setUserName(userMap.get("userName"));
+        user.setUserPassword(userMap.get("userPassword"));
+        user.setGender(Integer.valueOf(userMap.get("gender")));
         try {
-            user.setBirthday(new SimpleDateFormat("yyyy-MM-dd").parse(birthday));
+            user.setBirthday(new SimpleDateFormat("yyyy-MM-dd").parse(userMap.get("birthday")));
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        user.setPhone(phone);
-        user.setAddress(address);
-        user.setUserRole(Integer.parseInt(userRole));
+        user.setPhone(userMap.get("phone"));
+        user.setAddress(userMap.get("address"));
+        user.setUserRole(Integer.valueOf(userMap.get("userRole")));
         user.setCreationDate(new Date());
         user.setCreatedBy(((User) req.getSession().getAttribute(Constants.USER_SESSION)).getId());
+        user.setIdPicPath(userMap.get("idPicPath"));
+        user.setWorkPicPath(userMap.get("workPicPath"));
+
+        System.out.println("=====================");
+        System.out.println(userMap.get("workPicPath"));
+        System.out.println("=====================");
 
         UserServiceImpl userService = new UserServiceImpl();
         if (userService.addUser(user)){

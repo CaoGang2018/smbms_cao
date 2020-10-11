@@ -24,6 +24,6 @@ body {
 	<!-- 使用输出全局异常信息-->
 	<%-- <h1>全局异常信息：${exception.message}</h1> --%>
 	<%-- 用来使用局部输出 <h1>${e}</h1> --%>
-	<a href="${pageContext.request.contextPath }/login.html">返回</a>
+	<a href="${pageContext.request.contextPath }/dologin.do">返回</a>
 </body>
 </html>

@@ -133,21 +133,73 @@ public class UserServiceImpl implements UserService {
 
         try {
             connection = BaseDao.getConnection();
-            if (userDao.checkExist(connection, userCode) > 0){
+            User loginUser = userDao.getLoginUser(connection, userCode);
+            if (loginUser != null){
                 flag = true;
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            BaseDao.closeResource(connection, null, null);
         }
         return flag;
     }
 
+    @Override
+    public User getUserById(int id) {
+        Connection connection = null;
+        User user = null;
+
+        try {
+            connection = BaseDao.getConnection();
+            user = userDao.getUserById(connection, id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            BaseDao.closeResource(connection, null, null);
+        }
+        return user;
+    }
+
+    @Override
+    public boolean updateUser(User user) {
+        Connection connection = null;
+        boolean flag = false;
+
+        try {
+            connection = BaseDao.getConnection();
+            int updateUser = userDao.updateUser(connection, user);
+            flag = updateUser > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            BaseDao.closeResource(connection, null, null);
+        }
+        return flag;
+    }
+
+    @Override
+    public boolean delUserById(int id) {
+        Connection connection = null;
+        boolean flag = false;
+
+        try {
+            connection = BaseDao.getConnection();
+            flag = userDao.delUserById(connection, id) > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            BaseDao.closeResource(connection, null, null);
+        }
+        return flag;
+    }
     @Test
     public void test(){
         UserServiceImpl userService = new UserServiceImpl();
         // User admin = userService.login("admin", "1234567");
         boolean admin = userService.checkExist("admin");
         System.out.println(admin);
+        System.out.println(("F:\\javapro\\apache-tomcat-9.0.13\\webapps\\smbms_cao\\statics\\images\\3f4d9ea7-795f" +
+                "-4fde-9271-272d93d6759f\\admin11.jpg").length());
     }
 }

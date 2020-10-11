@@ -148,10 +148,62 @@ public class UserDaoImpl implements UserDao {
 
         if (connection != null){
             String sql = "insert into smbms_user (userCode, userName, userPassword, gender, birthday, phone, address," +
-                    "userRole, createdBy, creationDate,) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    "userRole, createdBy, creationDate, idPicPath, workPicPath) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?," +
+                    "?, ?)";
             Object[] params = {user.getUserCode(), user.getUserName(), user.getUserPassword(), user.getGender(),
                     user.getBirthday(), user.getPhone(), user.getAddress(), user.getUserRole(), user.getCreatedBy(),
-                    user.getCreationDate()};
+                    user.getCreationDate(), user.getIdPicPath(), user.getWorkPicPath()};
+
+            System.out.println("UserDaoImpl->addUser:" + user.getIdPicPath());
+            updateRow = BaseDao.execute(connection, sql, params, pstm);
+            BaseDao.closeResource(null, pstm, null);
+        }
+        return updateRow;
+    }
+
+    @Override
+    public User getUserById(Connection connection, int id) throws SQLException {
+        PreparedStatement pstm = null;
+        User user = null;
+        ResultSet resultSet = null;
+
+        if (connection != null){
+            String sql = "select u.*,r.roleName as userRoleName from smbms_user u,smbms_role r where u.id=? and u.userRole = r.id";
+            Object[] params = {id};
+            resultSet = BaseDao.execute(connection, sql, params, resultSet, pstm);
+            if(resultSet.next()){
+                user = new User();
+                user.setId(resultSet.getInt("id"));
+                user.setUserCode(resultSet.getString("userCode"));
+                user.setUserName(resultSet.getString("userName"));
+                user.setUserPassword(resultSet.getString("userPassword"));
+                user.setGender(resultSet.getInt("gender"));
+                user.setBirthday(resultSet.getDate("birthday"));
+                user.setPhone(resultSet.getString("phone"));
+                user.setAddress(resultSet.getString("address"));
+                user.setUserRole(resultSet.getInt("userRole"));
+                user.setCreatedBy(resultSet.getInt("createdBy"));
+                user.setCreationDate(resultSet.getDate("creationDate"));
+                user.setModifyBy(resultSet.getInt("modifyBy"));
+                user.setModifyDate(resultSet.getDate("modifyDate"));
+                user.setUserRoleName(resultSet.getString("userRoleName"));
+                user.setIdPicPath(resultSet.getString("idPicPath"));
+                user.setWorkPicPath(resultSet.getString("workPicPath"));
+            }
+            BaseDao.closeResource(null, pstm, resultSet);
+        }
+        return user;
+    }
+
+    @Override
+    public int updateUser(Connection connection, User user) throws SQLException {
+        PreparedStatement pstm = null;
+        int updateRow = 0;
+        if (connection != null){
+            String sql = "update smbms_user set userName=?, gender=?, birthday=?, phone=?, address=?, userRole=?," +
+                    "modifyBy=?, modifyDate=? where id = ?";
+            Object[] params = {user.getUserName(), user.getGender(), user.getBirthday(), user.getPhone(),
+                    user.getAddress(), user.getUserRole(), user.getModifyBy(), user.getModifyDate(), user.getId()};
 
             updateRow = BaseDao.execute(connection, sql, params, pstm);
             BaseDao.closeResource(null, pstm, null);
@@ -160,17 +212,15 @@ public class UserDaoImpl implements UserDao {
     }
 
     @Override
-    public int checkExist(Connection connection, String userCode) throws SQLException {
+    public int delUserById(Connection connection, int id) throws SQLException {
         PreparedStatement pstm = null;
         int updateRow = 0;
-        ResultSet rs = null;
 
         if(connection != null){
-            String sql = "select userCode from smbms_user where userCode = ?";
-            Object[] params = {userCode};
-            rs = BaseDao.execute(connection, sql, params, rs, pstm);
-            updateRow = rs.next() ? 1 : 0;
-            BaseDao.closeResource(null, pstm, rs);
+            String sql = "delete from smbms_user where id = ?";
+            Object[] params = {id};
+            updateRow = BaseDao.execute(connection, sql, params, pstm);
+            BaseDao.closeResource(null, pstm, null);
         }
         return updateRow;
     }

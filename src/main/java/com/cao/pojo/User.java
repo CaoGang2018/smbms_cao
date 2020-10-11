@@ -21,6 +21,25 @@ public class User {
     private Integer modifyBy;
     private Date modifyDate;
 
+    private  String idPicPath;
+    private  String workPicPath;
+
+    public String getIdPicPath() {
+        return idPicPath;
+    }
+
+    public void setIdPicPath(String idPicPath) {
+        this.idPicPath = idPicPath;
+    }
+
+    public String getWorkPicPath() {
+        return workPicPath;
+    }
+
+    public void setWorkPicPath(String workPicPath) {
+        this.workPicPath = workPicPath;
+    }
+
     private Integer age;
     private String userRoleName;
 

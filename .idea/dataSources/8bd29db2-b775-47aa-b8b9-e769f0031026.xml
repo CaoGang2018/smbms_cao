@@ -4787,7 +4787,17 @@ SELECT|sys.sys_config:null
       <Comment>更新时间</Comment>
       <DataType>datetime|0s</DataType>
     </column>
-    <key id="1155" parent="368" name="PRIMARY">
+    <column id="1155" parent="368" name="idPicPath">
+      <Position>14</Position>
+      <Comment>证件照路径</Comment>
+      <DataType>varchar(255)|0s</DataType>
+    </column>
+    <column id="1156" parent="368" name="workPicPath">
+      <Position>15</Position>
+      <Comment>工作证照片路径</Comment>
+      <DataType>varchar(255)|0s</DataType>
+    </column>
+    <key id="1157" parent="368" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>

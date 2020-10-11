@@ -7,7 +7,8 @@
             <span>用户管理页面 >> 用户修改页面</span>
         </div>
         <div class="providerAdd">
-        <form id="userForm" name="userForm" method="post" action="${pageContext.request.contextPath }/user/usermodifysave.html">
+        <form id="userForm" name="userForm" method="post"
+              action="${pageContext.request.contextPath }/jsp/user.do">
 			<input type="hidden" name="method" value="modifyexe">
 			<input type="hidden" name="id" value="${user.id }"/>
 			 <div>
@@ -31,7 +32,7 @@
 					 </select>
              </div>
 			 <div>
-                    <label for="data">出生日期：</label>
+                    <label for="birthday">出生日期：</label>
                     <input type="text" Class="Wdate" id="birthday" name="birthday" value="<fmt:formatDate value="${user.birthday }" type="both"  pattern="yyyy-MM-dd"/>"
 					readonly="readonly" onclick="WdatePicker();">
 					
@@ -39,12 +40,12 @@
               </div>
 			
 		       <div>
-                    <label for="userphone">用户电话：</label>
+                    <label for="phone">用户电话：</label>
                     <input type="text" name="phone" id="phone" value="${user.phone }"> 
                     <font color="red"></font>
                </div>
                 <div>
-                    <label for="userAddress">用户地址：</label>
+                    <label for="address">用户地址：</label>
                     <input type="text" name="address" id="address" value="${user.address }">
                 </div>
 				<div>

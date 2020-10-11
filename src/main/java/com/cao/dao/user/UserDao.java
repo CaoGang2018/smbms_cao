@@ -27,5 +27,9 @@ public interface UserDao {
 
     public int addUser(Connection connection, User user) throws SQLException;
 
-    public int checkExist(Connection connection, String userCode) throws SQLException;
+    public User getUserById(Connection connection, int id) throws SQLException;
+
+    public int updateUser(Connection connection, User user) throws SQLException;
+
+    public int delUserById(Connection connection, int id) throws SQLException;
 }

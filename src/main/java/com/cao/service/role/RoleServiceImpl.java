@@ -1,9 +1,11 @@
 package com.cao.service.role;
 
+import com.alibaba.fastjson.JSONArray;
 import com.cao.dao.BaseDao;
 import com.cao.dao.role.RoleDao;
 import com.cao.dao.role.RoleDaoImpl;
 import com.cao.pojo.Role;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -36,4 +38,15 @@ public class RoleServiceImpl implements RoleService {
         }
         return roleList;
     }
+
+    @Test
+    public void test(){
+        RoleServiceImpl roleService = new RoleServiceImpl();
+        List<Role> roleList = roleService.getRoleList();
+        System.out.println(JSONArray.toJSONString(roleList));
+        for (Role role : roleList) {
+            System.out.println(role.getRoleName());
+        }
+    }
+
 }
